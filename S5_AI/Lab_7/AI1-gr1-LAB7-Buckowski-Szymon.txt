@@ -1,0 +1,13 @@
+let xhr = new XMLHttpRequest();
+        xhr.open("GET", "https://api.sendsms.wizut/api/v1/send?api_key={klucz}&to={505123456}&message={tutaj+wiadomość}");
+        req.send(null);
+
+let data = {
+  "key": 78912,
+  'to": 505123456
+  "message": "Jason Sweet",
+};
+
+xhr.onload = () => console.log(xhr.responseText);
+xhr.send(data)
+	

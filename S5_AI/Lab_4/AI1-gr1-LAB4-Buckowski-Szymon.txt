@@ -1,0 +1,4 @@
+var canvas = document.getElementById('plotno'),
+context = canvas.getContext('2d');
+img = document.getElementById('obrazek');
+context.drawImage(base_image, 0, 0, 200, 200);

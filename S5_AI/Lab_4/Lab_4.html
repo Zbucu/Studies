@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Maps with Leaflet</title>
+    <link rel="stylesheet" href="leaflet-1.7.1/leaflet.css" />
+    <script src="leaflet-1.7.1/leaflet-src.js"></script>
+    <script src="leaflet-1.7.1/leaflet-providers.js"></script>
+    <script src="leaflet-1.7.1/leaflet-image.js"></script>
+
+    <style>
+        #map-and-canvas {
+            display: flex;
+            order: 2;
+            justify-content: space-between;
+            float: left;
+        }
+
+        #map {
+            width: 600px;
+            height: 300px;
+            border: 1px solid black;
+        }
+
+        #rasterMap {
+            width: 300px;
+            height: 150px;
+            border: 1px solid black;
+            clear: both;
+            float: left;
+        }
+
+        #buttons {
+            clear: both;
+            float: left;
+            padding-bottom: 10px;
+        }
+
+        #board {
+            width: 606.5px;
+            height: 306.5px;
+            border: 1px dashed #c82222;
+            margin-left: 300px;
+            float: right;
+        }
+
+        .puzzle-piece-socket {
+            content: "";
+            width: 150px;
+            height: 75px;
+            display: flex;
+            flex-wrap: wrap;
+            border: 1px dashed #c82222;
+            float: left;
+        }
+
+        .puzzle-piece-socket>* {
+            flex: 0 0 100%;
+        }
+
+        #puzzle-pieces {
+            /* justify-content: space-between; */
+            width: 99.5vw;
+            /* height: 300px; */
+            display: flex;
+            flex-wrap: wrap;
+            padding-top: 10px;
+            clear: both;
+            float: left;
+        }
+
+        #puzzle-pieces>* {
+            flex: 0 0 5%;
+            margin-right: 1%;
+            margin-top: 1%;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+
+        <div id="map-and-canvas">
+            <div id="map"></div>
+
+            <div id="puzzle-board">
+                <div id="board">
+                    <div class="puzzle-piece-socket" data-value="0" id="div0">
+                    </div>
+                    <div class="puzzle-piece-socket" data-value="1" id="div1">
+                    </div>
+                    <div class="puzzle-piece-socket" data-value="2" id="div2">
+                    </div>
+                    <div class="puzzle-piece-socket" data-value="3" id="div3">
+                    </div>
+                    <div class="puzzle-piece-socket" data-value="4" id="div4">
+                    </div>
+                    <div class="puzzle-piece-socket" data-value="5" id="div5">
+                    </div>
+                    <div class="puzzle-piece-socket" data-value="6" id="div6">
+                    </div>
+                    <div class="puzzle-piece-socket" data-value="7" id="div7">
+                    </div>
+                    <div class="puzzle-piece-socket" data-value="8" id="div8">
+                    </div>
+                    <div class="puzzle-piece-socket" data-value="9" id="div9">
+                    </div>
+                    <div class="puzzle-piece-socket" data-value="10" id="div10">
+                    </div>
+                    <div class="puzzle-piece-socket" data-value="11" id="div11">
+                    </div>
+                    <div class="puzzle-piece-socket" data-value="12" id="div12">
+                    </div>
+                    <div class="puzzle-piece-socket" data-value="13" id="div13">
+                    </div>
+                    <div class="puzzle-piece-socket" data-value="14" id="div14">
+                    </div>
+                    <div class="puzzle-piece-socket" data-value="15" id="div15">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="puzzle-elements"></div>
+
+        <div id="buttons">
+            <button id="getLocation">Get Current Location</button>
+            <button id="saveButton">Save Raster Map</button>
+            <br>
+        </div>
+
+        <canvas id="rasterMap"></canvas>
+
+        <div id="puzzle-pieces"></div>
+    </div>
+
+    <script>
+
+typeof Notification !== "undefined";
+Notification.permission;
+Notification.requestPermission().then(function (permission) {
+
+    console.log(permission);
+
+});
+        let map = L.map('map').setView([53.430127, 14.564802], 18);
+        // L.tileLayer.provider('OpenStreetMap.DE').addTo(map);
+        L.tileLayer.provider('Esri.WorldImagery').addTo(map);
+        let marker = L.marker([53.430127, 14.564802]).addTo(map);
+        marker.bindPopup("<strong>Hello!</strong><br>This is a popup.");
+
+        document.getElementById("saveButton").addEventListener("click", function() {
+            leafletImage(map, function (err, canvas) {
+                // here we have the canvas
+                let rasterMap = document.getElementById("rasterMap");
+                let rasterContext = rasterMap.getContext("2d");
+
+                rasterContext.drawImage(canvas, 0, 0, 300, 150);
+
+                cutImageUp();
+            });
+        });
+
+        document.getElementById("getLocation").addEventListener("click", function(event) {
+            if (! navigator.geolocation) {
+                console.log("No geolocation.");
+            }
+
+            navigator.geolocation.getCurrentPosition(position => {
+                console.log(position);
+                let lat = position.coords.latitude;
+                let lon = position.coords.longitude;
+
+                map.setView([lat, lon]);
+                marker.remove();
+                marker = L.marker([lat, lon]).addTo(map);
+                //marker.bindPopup("<strong>This is Your Location!</strong>");
+            }, positionError => {
+                console.error(positionError);
+            });
+        });
+
+        function shuffle(array) {
+    let currentIndex = array.length,  randomIndex;
+    
+    // While there remain elements to shuffle.
+    while (currentIndex != 0) {
+    
+        // Pick a remaining element.
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+    
+        // And swap it with the current element.
+        [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex], array[currentIndex]];
+    }
+    
+    return array;
+}
+
+function cutImageUp() {
+    
+    var image = document.getElementById("rasterMap");
+    
+    var XD = document.getElementById("puzzle-pieces");
+    XD.innerHTML="";
+
+    var imagePieces = [];
+    var widthOfOnePiece = 75;
+    var heightOfOnePiece = 37.5;
+    
+
+    let counter = 0;
+
+    for(var x = 0; x < 4; ++x) {
+        for(var y = 0; y < 4; ++y) {
+            var canvas = document.createElement('canvas');
+            canvas.className = counter;
+            canvas.width = widthOfOnePiece;
+            canvas.height = heightOfOnePiece;
+            var context = canvas.getContext('2d');
+            context.drawImage(
+                            image, 
+                            y * widthOfOnePiece,
+                            x * heightOfOnePiece, 
+                            widthOfOnePiece, 
+                            heightOfOnePiece, 
+                            0, 
+                            0, 
+                            canvas.width, 
+                            canvas.height);
+            imagePieces.push({data: canvas.toDataURL(), className: canvas.className});
+            // imagePieces.push({data: canvas.toDataURL(), id: canvas.id});
+            counter ++;
+        }
+    }
+
+    shuffle(imagePieces);
+    for(let i = 0; i < imagePieces.length; i++) {
+        var image = new Image();
+        image.id = imagePieces[i].className;
+        image.setAttribute("draggable", "true");
+        image.src = imagePieces[i].data;
+        XD.appendChild(image);
+    }
+
+    drag_and_drop();
+
+}
+
+function drag_and_drop(){
+    let items = document.querySelectorAll("#puzzle-pieces img");
+    for (let item of items) {
+        item.addEventListener("dragstart", function(event) {
+            this.style.border = "1px dashed #D8D8FF";
+            event.dataTransfer.setData("text", this.id);
+        });
+
+        item.addEventListener("dragend", function(event) {
+            this.style.borderWidth = "0";
+        });
+    }
+
+    let targets = document.querySelectorAll(".puzzle-piece-socket");
+    for (let target of targets) {
+        target.addEventListener("dragenter", function (event) {
+            // this.style.border = "1px dashed #7FE9D9";
+        });
+        target.addEventListener("dragleave", function (event) {
+            // this.style.border = "1px solid #7f7fe9";
+        });
+        target.addEventListener("dragover", function (event) {
+            event.preventDefault();
+        });
+        target.addEventListener("drop", function (event) {
+            // if(this.appendChild.length === 0){
+            let source = document.querySelector("[id='" + event.dataTransfer.getData('text') + "']");
+            // const data = event.dataTransfer.getData("text");
+            // const source = document.getElementById(data);
+            this.appendChild(source);
+            // this.style.border = "1px solid #7f7fe9";
+            // }
+
+            check_if_game_over_by_winning();
+
+        }, false);
+    }
+}
+
+// drag_and_drop();
+
+const notifyMe = () => {
+    if (!window.Notification) {
+      console.log('Browser does not support notifications.')
+    } else {
+      // check if permission is already granted
+      if (Notification.permission === 'granted') {
+        // show notification here
+        const notify = new Notification('Slay!', {
+          body: 'Map in the correct place so it\'s nice!',
+        })
+      } else {
+        // request permission from the user
+        Notification.requestPermission()
+          .then(function (p) {
+            if (p === 'granted') {
+              // show notification here
+              const notify = new Notification('Slay!', {
+                body: 'Map in the correct place so it\'s nice!',
+              })
+            } else {
+              console.log('User has blocked notifications.')
+            }
+          })
+          .catch(function (err) {
+            console.error(err)
+          })
+      }
+    }
+  }
+
+function check_if_game_over_by_winning(){
+    let correct_puzzles_counter = 0;
+    for(let i = 0; i < 16; i++){
+        let puzzle_socket_div_id = document.getElementById("div" + i).getAttribute("data-value");
+        let puzzle_socket_image_id = document.getElementById("div" + i).getElementsByTagName("*");
+        
+        if(puzzle_socket_image_id[0] != null && puzzle_socket_image_id[0].id == puzzle_socket_div_id){
+            correct_puzzles_counter++;
+        }
+    }
+
+    if(correct_puzzles_counter == 16){
+        document.getElementById("board").style.border = "1px solid #c82222";
+        var miejsca = document.getElementsByClassName("puzzle-piece-socket");
+        for (let miejsce of miejsca)
+        {
+            miejsce.style.border = "1px solid #c82222";
+        }
+        notifyMe();
+        console.log("Congratulations, You Won!");
+    }
+}
+    </script>
+</body>
+</html>
